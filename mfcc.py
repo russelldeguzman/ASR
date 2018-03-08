@@ -81,9 +81,6 @@ def get_mfcc(signal,fr_len,fr_step,fs, num_coef):
     #window signal
     windowed_sig = window_sig(signal,fr_len,fr_step)
 
-    #silence processing
-    windowed_sig = find_speech(windowed_sig,fs)
-
     #fft signal
     for window in range(0, len(windowed_sig)):
         #fft signal

@@ -2,7 +2,7 @@ import numpy as np
 import scipy.stats as ss
 from mfcc import ret_mfcc
 import scipy
-
+from silence_detect import find_speech
 def normalize(x):
     return (x + (x == 0)) / np.sum(x)
 
@@ -135,7 +135,7 @@ class HMM:
         self.mu = expected_mu
         self.covs = expected_covs
         self.A = expected_A
-        print (expected_covs)
+        print (log_likelihood)
         return (expected_prior, expected_A, expected_mu, expected_covs)
 
     def train(self, num_training_samples):
@@ -148,8 +148,11 @@ class HMM:
             #load sample
             fp = input("Enter wave filepath or filename")
             FS, signal = scipy.io.wavfile.read(fp)
+
+            #silence processing
+            sig = find_speech(signal,FS)
             #get mfccs
-            mfcc = ret_mfcc(signal,FS)
+            mfcc = ret_mfcc(sig,FS)
 
             if l == 0:
                 prior_sum, A_sum, mu_sum, covs_sum = self._expectation_maximization(mfcc)
@@ -185,6 +188,7 @@ if __name__ == "__main__":
     # t1 = np.ones((4, 40)) + .001 * rstate.rand(4, 40)
     # t1 /= t1.sum(axis=0)
     m1 = HMM('test', 2)
+    m1.train(1)
     m1.train(1)
     # trellis = m1._trellis_init(t1)
     # ll,alpha =  m1._alpha_recursion(t1, trellis)

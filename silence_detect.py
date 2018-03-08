@@ -1,24 +1,19 @@
 import numpy as np
 import sounddevice as sd
 import time
+import matplotlib.pyplot as plt
 
 def get_sig_energy(signal, delta):
     ret = np.zeros(len(signal) - delta)
+    energy_arr = signal ** 2
     for s in range(0,len(signal)-delta):
-        nrg = 0
-        for i in range(0, delta):
-            nrg = nrg + signal.item(s+i)**2
-        ret[s] = nrg
+        ret[s] = np.sum(energy_arr[s:s+delta])
     return ret
 
 def get_N1(signal,lt, ut):
     uindex = np.amin(np.argwhere(signal > ut))
     lindex = np.amin(np.argwhere(signal > lt)) #TODO these need work
     new_index_needed = False
-    # print lt
-    # print ut
-    # print lindex
-    # print uindex
     result = lindex
     for l in range(lindex, uindex):
         if signal[l] < lt:
@@ -28,19 +23,33 @@ def get_N1(signal,lt, ut):
             new_index_needed = False
     return result
 
-def search_N1_prime(signal, n1, zero_cross_thresh):
-    step = 1
-    zero_crossings = np.argwhere(signal[(n1-step):n1] > zero_cross_thresh)
-    if len(zero_crossings) >= 3:
-        return zero_crossings[0]
+def search_N1_prime(signal, n1, zero_cross_thresh,step):
+    count = 0
+    indexes = []
+    for i in range(n1-step , n1):
+        if signal[i] > zero_cross_thresh:
+            indexes.append(i)
+            count += 1
+        if count >= 3:
+            break
+
+    if len(indexes) >= 3:
+        return indexes[0]
     else:
         return n1
 
-def search_N2_prime(signal, n2, zero_cross_thresh):
-    step = 1
-    zero_crossings = np.argwhere(signal[n2:(n2+step)] > zero_cross_thresh)
-    if len(zero_crossings) >= 3:
-        return zero_crossings[-1]
+def search_N2_prime(signal, n2, zero_cross_thresh,step):
+    count = 0
+    indexes = []
+    for i in range(n2 + step , n2):
+        if signal[i] > zero_cross_thresh:
+            indexes.append(i)
+            count += 1
+        if count >= 3:
+            break
+
+    if len(indexes) >= 3:
+        return indexes[0]
     else:
         return n2
 
@@ -59,8 +68,8 @@ def get_N2(signal,lt,ut):
 
 def rabiner_sambur(signal, Fs):
     #calc delta
-    delta = 1 #25ms
-    trim = 10 # trim the window so we capture the main signal
+    delta = int(Fs / 100) #10ms
+    trim = int(Fs / 10) # trim the window so we capture the main signal
     signal = signal[trim: len(signal)]
     #compute energy of signal
     sig_nrg = get_sig_energy(signal, delta)
@@ -84,15 +93,18 @@ def rabiner_sambur(signal, Fs):
 
     #find first speech point
     n1 = get_N1(sig_nrg, lower_nrg_thresh, upper_nrg_thresh)
-
     #search for the actual point 25 ms before
-    n1_p = search_N1_prime(zx_arr, n1, zero_crossing_thresh)
+    n1_p = search_N1_prime(zx_arr, n1, zero_crossing_thresh, delta)
 
     #find n2
     n2 = get_N2(sig_nrg, lower_nrg_thresh, upper_nrg_thresh)
 
     #TODO: Check this
-    n2_p = search_N2_prime(zx_arr, n2, zero_crossing_thresh)
+    n2_p = search_N2_prime(zx_arr, n2, zero_crossing_thresh,delta)
+    plt.plot(signal)
+    plt.plot(n1_p, signal[n1_p],'ro')
+    plt.plot(n2_p, signal[n2_p],'ro')
+    plt.show()
 
     return (n1_p,n2_p)
 
