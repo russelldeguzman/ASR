@@ -3,6 +3,7 @@ import scipy.stats as ss
 from mfcc import ret_mfcc
 import scipy
 from silence_detect import find_speech
+
 def normalize(x):
     return (x + (x == 0)) / np.sum(x)
 
@@ -146,7 +147,7 @@ class HMM:
         covs_sum = None
         for l in range(self.L):
             #load sample
-            fp = input("Enter wave filepath or filename")
+            fp = 'trainingwavs/'+ self.name + str(l) + '.wav'
             FS, signal = scipy.io.wavfile.read(fp)
 
             #silence processing
@@ -157,27 +158,27 @@ class HMM:
             if l == 0:
                 prior_sum, A_sum, mu_sum, covs_sum = self._expectation_maximization(mfcc)
             else:
-                ret = _expectation_maximization(mfcc)
+                ret = self._expectation_maximization(mfcc)
                 prior_sum += ret[0]
                 A_sum += ret[1]
                 mu_sum += ret[2]
-                covs_sim += ret[3]
+                covs_sum += ret[3]
 
         self.prior = prior_sum / self.L
         self.A = A_sum / self.L
         self.mu = mu_sum / self.L
         self.covs = covs_sum / self.L
-        np.save(self.name + '_inital_state', self.prior)
-        np.save(self.name + '_A', self.A)
-        np.save(self.name + '_mu', self.prior)
-        np.save(self.name + '_covs', self.prior)
+        np.save('lambda/' + self.name + '_inital_state', self.prior)
+        np.save('lambda/' + self.name + '_A', self.A)
+        np.save('lambda/' + self.name + '_mu', self.prior)
+        np.save('lambda/' + self.name + '_covs', self.prior)
 
     def load_lambda(self):
         try:
-            self.prior = load(self.name + '_inital_state.npy')
-            self.A = load(self.name + '_A.npy')
-            self.mu = load(self.name + '_mu.npy')
-            self.covs = load(self.name + '_covs.npy')
+            self.prior = load('lambda/' + self.name + '_inital_state.npy')
+            self.A = load('lambda/' + self.name + '_A.npy')
+            self.mu = load('lambda/' + self.name + '_mu.npy')
+            self.covs = load('lambda/' + self.name + '_covs.npy')
         except:
             print ("Loading failed.")
 
@@ -187,8 +188,7 @@ if __name__ == "__main__":
     # rstate = np.random.RandomState(0)
     # t1 = np.ones((4, 40)) + .001 * rstate.rand(4, 40)
     # t1 /= t1.sum(axis=0)
-    m1 = HMM('test', 2)
-    m1.train(1)
+    m1 = HMM('Odessa', 2)
     m1.train(1)
     # trellis = m1._trellis_init(t1)
     # ll,alpha =  m1._alpha_recursion(t1, trellis)

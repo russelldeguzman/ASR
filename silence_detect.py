@@ -101,10 +101,10 @@ def rabiner_sambur(signal, Fs):
 
     #TODO: Check this
     n2_p = search_N2_prime(zx_arr, n2, zero_crossing_thresh,delta)
-    plt.plot(signal)
-    plt.plot(n1_p, signal[n1_p],'ro')
-    plt.plot(n2_p, signal[n2_p],'ro')
-    plt.show()
+    # plt.plot(signal)
+    # plt.plot(n1_p, signal[n1_p],'ro')
+    # plt.plot(n2_p, signal[n2_p],'ro')
+    # plt.show()
 
     return (n1_p,n2_p)
 
